@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import * as v from "@valibot/valibot";
+import type * as v from "@valibot/valibot";
 
 export type FritzRequest = {
   endpoint: string;

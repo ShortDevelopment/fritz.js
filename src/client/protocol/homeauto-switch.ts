@@ -1,10 +1,10 @@
 import * as v from "@valibot/valibot";
 import type { FritzRequestWithBody } from "../request.ts";
 
-const BaseEndpoint = {
+const BaseEndpoint: Pick<FritzRequestWithBody, "method" | "endpoint"> = {
   method: "GET",
   endpoint: "/webservices/homeautoswitch.lua",
-} satisfies Partial<FritzRequestWithBody>;
+};
 
 export const Switches = {
   List: {
@@ -68,17 +68,6 @@ export const Switches = {
   // Additional commands
 };
 
-const DeviceInfoSchema = v.object({
-  "@identifier": v.string(),
-  "@id": v.string(),
-  "@manufacturer": v.string(),
-  "@productname": v.string(),
-  present: v.union([v.literal("0"), v.literal("1")]),
-  name: v.string(),
-});
-
-export type DeviceInfo = v.InferOutput<typeof DeviceInfoSchema>;
-
 export const Devices = {
   List: {
     ...BaseEndpoint,
@@ -88,7 +77,14 @@ export const Devices = {
     }),
     response: v.object({
       devicelist: v.object({
-        device: v.array(DeviceInfoSchema),
+        device: v.array(v.object({
+          "@identifier": v.string(),
+          "@id": v.string(),
+          "@manufacturer": v.string(),
+          "@productname": v.string(),
+          present: v.union([v.literal("0"), v.literal("1")]),
+          name: v.string(),
+        })),
       }),
     }),
   } satisfies FritzRequestWithBody,
@@ -103,24 +99,3 @@ export const Devices = {
     response: v.unknown(),
   } satisfies FritzRequestWithBody,
 };
-
-export const HomeAutoSwitch = {
-  method: "GET",
-  endpoint: "/webservices/homeautoswitch.lua",
-  request: v.object({
-    ain: v.optional(v.string()),
-    switchcmd: v.string(),
-    param: v.optional(v.string()),
-    sid: v.optional(v.string()),
-    onoff: v.optional(v.union([v.literal("0"), v.literal("1")])),
-    level: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(100))),
-    hue: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(359))),
-    saturation: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(255))),
-    temperature: v.optional(
-      v.pipe(v.number(), v.minValue(2700), v.maxValue(6500)),
-    ),
-  }),
-  response: v.object({
-    status: v.string(),
-  }),
-} satisfies FritzRequestWithBody;

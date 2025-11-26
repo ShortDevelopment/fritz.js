@@ -1,17 +1,6 @@
-import { FritzClient } from "./client/index.ts";
-import {
-  DeviceInfo,
-  Devices,
-  HomeAutoSwitch,
-} from "./client/protocol/homeauto-switch.ts";
-
-export const listSwitchIds = async (client: FritzClient) => {
-  await using response = await client.request(HomeAutoSwitch, {
-    switchcmd: "getswitchlist",
-  });
-
-  return await response.rawText();
-};
+import type { FritzClient } from "./client/index.ts";
+import type * as v from "@valibot/valibot";
+import { Devices } from "./client/protocol/homeauto-switch.ts";
 
 export const listDevices = async (
   client: FritzClient,
@@ -24,6 +13,10 @@ export const listDevices = async (
     new SmartHomeDevice(client, info)
   );
 };
+
+type DeviceInfo = v.InferOutput<
+  typeof Devices.List.response
+>["devicelist"]["device"][number];
 
 /**
  * Stores information about a Smart Home device.
@@ -45,19 +38,19 @@ class SmartHomeDevice {
     private readonly info: DeviceInfo,
   ) {}
 
-  get actorId() {
+  get actorId(): string {
     return this.info["@identifier"];
   }
 
-  get name() {
+  get name(): string {
     return this.info.name;
   }
 
-  get productName() {
+  get productName(): string {
     return this.info["@productname"];
   }
 
-  get manufacturer() {
+  get manufacturer(): string {
     return this.info["@manufacturer"];
   }
 }

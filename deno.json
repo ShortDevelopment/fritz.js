@@ -1,6 +1,21 @@
 {
-  "tasks": {
-    "dev": "deno run --watch main.ts"
+  "name": "@shortdev/fritz",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./smarthome": "./src/smarthome.ts",
+    "./users": "./src/users.ts"
+  },
+  "publish": {
+    "include": [
+      "LICENSE",
+      "README",
+      "src/"
+    ],
+    "exclude": [
+      "test/"
+    ]
   },
   "imports": {
     "@libs/xml": "jsr:@libs/xml@^7.0.3",
@@ -8,5 +23,16 @@
     "@std/crypto": "jsr:@std/crypto@^1.0.5",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
     "@valibot/valibot": "jsr:@valibot/valibot@^1.1.0"
+  },
+  "tasks": {
+    "fix": "deno fmt && deno lint && deno check",
+    "test": "deno test -A"
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-slow-types"
+      ]
+    }
   }
 }

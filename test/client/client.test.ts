@@ -1,6 +1,6 @@
 import { FritzClient } from "../../src/client/index.ts";
 import * as v from "@valibot/valibot";
-import { FritzGetRequest } from "../../src/client/request.ts";
+import type { FritzGetRequest } from "../../src/client/request.ts";
 import { assertEquals, assertNotEquals } from "@std/assert";
 import { baseUrl } from "../utils.ts";
 
