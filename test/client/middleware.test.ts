@@ -16,7 +16,7 @@ Deno.test("Request modification", async () => {
 
   await using testClient = FritzClient.createTestClient(
     "http://fritz.box",
-    async (request) => {
+    (request) => {
       request = new Request(request.url, request);
       return new Response(
         JSON.stringify({
@@ -45,7 +45,7 @@ Deno.test("Request modification", async () => {
         request.url.searchParams.set("testparam", "testvalue");
         return await next(request);
       },
-      async dispose() {
+      dispose() {
         assertEquals(
           disposeCounter++,
           1,
@@ -63,7 +63,7 @@ Deno.test("Request modification", async () => {
         request.url.searchParams.set("anotherparam", "anothervalue");
         return await next(request);
       },
-      async dispose() {
+      dispose() {
         assertEquals(
           disposeCounter++,
           0,

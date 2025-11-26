@@ -115,7 +115,7 @@ export class FritzClient {
 
   static createTestClient(
     baseUrl: string | URL,
-    handler: (request: MiddlewareRequest) => Promise<Response>,
+    handler: (request: MiddlewareRequest) => Promise<Response> | Response,
   ): FritzClient {
     const client = new FritzClient(baseUrl);
     client.executeRequest = async (request) => {
