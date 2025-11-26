@@ -1,6 +1,6 @@
 import { UserPassword } from "../../src/client/auth/user-password.ts";
 import { FritzClient } from "../../src/client/index.ts";
-import { password, username } from "../utils.ts";
+import { baseUrl, password, username } from "../utils.ts";
 import { assertEquals, assertNotEquals } from "@std/assert";
 
 Deno.test("Challenge handling V1", async () => {
@@ -24,13 +24,17 @@ Deno.test("Challenge handling V2", async () => {
   );
 });
 
-Deno.test("UserNamePasswordAuth login", async () => {
-  await using client = new FritzClient("http://fritz.box");
-  const auth = new UserPassword({ username, password });
+Deno.test({
+  name: "UserNamePasswordAuth login",
+  ignore: baseUrl === undefined,
+  async fn() {
+    await using client = new FritzClient(baseUrl);
+    const auth = new UserPassword({ username, password });
 
-  const session = await auth.login(client);
-  console.log({ session });
-  assertNotEquals(session.sid.replaceAll("0", ""), "");
+    const session = await auth.login(client);
+    console.log({ session });
+    assertNotEquals(session.sid.replaceAll("0", ""), "");
 
-  await auth.logout(client, session);
+    await auth.logout(client, session);
+  },
 });

@@ -1,6 +1,7 @@
 import type { FritzClient } from "../index.ts";
 import { LoginSid, LogoutSid, RequestSid } from "../protocol/login-sid.ts";
 import type { IAuthHandler, SessionInfo } from "./handler.ts";
+import { crypto } from "@std/crypto";
 
 export type NetworkCredential = {
   readonly username: string;
