@@ -82,11 +82,71 @@ export const Devices = {
           "@id": v.string(),
           "@manufacturer": v.string(),
           "@productname": v.string(),
+          "@functionbitmask": v.string(),
           present: v.union([v.literal("0"), v.literal("1")]),
+          txbusy: v.union([v.literal("0"), v.literal("1")]),
           name: v.string(),
         })),
       }),
     }),
+  } satisfies FritzRequestWithBody,
+
+  SetOnOff: {
+    ...BaseEndpoint,
+    request: v.object({
+      ain: v.string(),
+      switchcmd: v.literal("setsimpleonoff"),
+      onoff: v.union([v.literal("0"), v.literal("1")]),
+      sid: v.optional(v.string()),
+    }),
+    response: v.unknown(),
+  } satisfies FritzRequestWithBody,
+
+  SetLevel: {
+    ...BaseEndpoint,
+    request: v.object({
+      ain: v.string(),
+      switchcmd: v.literal("setlevel"),
+      level: v.pipe(v.number(), v.minValue(0), v.maxValue(255)),
+      sid: v.optional(v.string()),
+    }),
+    response: v.unknown(),
+  } satisfies FritzRequestWithBody,
+
+  SetLevelPercentage: {
+    ...BaseEndpoint,
+    request: v.object({
+      ain: v.string(),
+      switchcmd: v.literal("setlevelpercentage"),
+      level: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+      sid: v.optional(v.string()),
+    }),
+    response: v.unknown(),
+  } satisfies FritzRequestWithBody,
+
+  SetColorUnmapped: {
+    ...BaseEndpoint,
+    request: v.object({
+      ain: v.string(),
+      switchcmd: v.literal("setunmappedcolor"),
+      hue: v.pipe(v.number(), v.minValue(0), v.maxValue(359)),
+      saturation: v.pipe(v.number(), v.minValue(0), v.maxValue(255)),
+      duration: v.pipe(v.number(), v.minValue(0)),
+      sid: v.optional(v.string()),
+    }),
+    response: v.unknown(),
+  } satisfies FritzRequestWithBody,
+
+  SetColorTemperature: {
+    ...BaseEndpoint,
+    request: v.object({
+      ain: v.string(),
+      switchcmd: v.literal("setcolortemperature"),
+      temperature: v.pipe(v.number(), v.minValue(2700), v.maxValue(6500)),
+      duration: v.pipe(v.number(), v.minValue(0)),
+      sid: v.optional(v.string()),
+    }),
+    response: v.unknown(),
   } satisfies FritzRequestWithBody,
 
   Info: {
