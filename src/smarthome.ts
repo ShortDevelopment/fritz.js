@@ -1,7 +1,35 @@
+/**
+ * Module for managing Smart Home devices connected to a Fritz!Box.
+ *
+ * @example
+ * ```ts
+ * import { FritzClient } from "@shortdev/fritz";
+ * import { listDevices } from "@shortdev/fritz/smarthome";
+ *
+ * await using client = new FritzClient("http://fritz.box");
+ * const devices = await listDevices(client);
+ * for (const device of devices) {
+ *  console.log(`Device: ${device.name} (${device.productName}) by ${device.manufacturer}`);
+ *
+ *  if (device.supportsFeature(DeviceFunctionBitmask.SupportsOnOff)) {
+ *    await device.turnOn();
+ *    console.log("  Turned on");
+ *  }
+ * }
+ * ```
+ *
+ * @module
+ */
+
 import type { FritzClient } from "./client/index.ts";
 import type * as v from "@valibot/valibot";
 import { Devices } from "./client/protocol/homeauto-switch.ts";
 
+/**
+ * Lists all Smart Home devices known to the Fritz!Box.
+ * @param client The FritzClient instance.
+ * @returns Array of all known SmartHomeDevice instances.
+ */
 export const listDevices = async (
   client: FritzClient,
 ): Promise<SmartHomeDevice[]> => {
@@ -58,8 +86,8 @@ type HsvColor = {
  * Stores information about a Smart Home device.
  * @example
  * ```ts
- * import { FritzClient } from "./client/index.ts";
- * import { listDevices } from "./smarthome.ts";
+ * import { FritzClient } from "@shortdev/fritz";
+ * import { listDevices } from "@shortdev/fritz/smarthome";
  *
  * await using client = new FritzClient("http://fritz.box");
  * const devices = await listDevices(client);
@@ -68,28 +96,43 @@ type HsvColor = {
  * }
  * ```
  */
-class SmartHomeDevice {
+export class SmartHomeDevice {
   constructor(
     private readonly client: FritzClient,
     private readonly info: DeviceInfo,
   ) {}
 
+  /**
+   * The unique actor ID of the device.
+   */
   get actorId(): string {
     return this.info["@identifier"];
   }
 
+  /**
+   * The name of the device.
+   */
   get name(): string {
     return this.info.name;
   }
 
+  /**
+   * The product name of the device.
+   */
   get productName(): string {
     return this.info["@productname"];
   }
 
+  /**
+   * The manufacturer of the device.
+   */
   get manufacturer(): string {
     return this.info["@manufacturer"];
   }
 
+  /**
+   * A bitmask representing the device's supported functions.
+   */
   get features(): DeviceFunctionBitmask {
     return parseInt(this.info["@functionbitmask"], 10);
   }

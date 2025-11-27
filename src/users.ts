@@ -1,9 +1,36 @@
+/**
+ * Module for managing users on the Fritz!Box.
+ *
+ * @example
+ * ```ts
+ * import { FritzClient } from "@shortdev/fritz";
+ * import { listUsers, lastActiveUser } from "@shortdev/fritz/users";
+ *
+ * await using client = new FritzClient("http://fritz.box");
+ * const users = await listUsers(client);
+ * for (const user of users) {
+ *   console.log(`User: ${user.name} ${user.wasLastActive ? "(last active)" : ""}`);
+ * }
+ * ```
+ *
+ * @module
+ */
+
 import type { FritzClient } from "./client/index.ts";
 import { RequestSid } from "./client/protocol/login-sid.ts";
 
-type FritzUser = {
-  name: string;
-  wasLastActive: boolean;
+/**
+ * Represents a user registered on the Fritz!Box.
+ */
+export type FritzUser = {
+  /**
+   * The name of the user.
+   */
+  readonly name: string;
+  /**
+   * Indicates if the user was the last active user.
+   */
+  readonly wasLastActive: boolean;
 };
 
 /**

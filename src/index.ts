@@ -1,2 +1,14 @@
+/**
+ * Fritz!Box Client Library
+ *
+ * @example
+ * ```ts
+ * import { FritzClient } from "@shortdev/fritz";
+ * await using client = new FritzClient("http://fritz.box");
+ * ```
+ *
+ * @module
+ */
+
 export { FritzClient } from "./client/index.ts";
-export { auth, UserPassword } from "./client/auth/index.ts";
+export * from "./client/auth/index.ts";

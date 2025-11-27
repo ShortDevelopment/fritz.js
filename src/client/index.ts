@@ -10,7 +10,7 @@ import { parse as parseXml } from "@libs/xml";
  * Client to interact with a Fritz!Box device.
  * @example
  * ```ts
- * import { FritzClient } from "./client.ts";
+ * import { FritzClient } from "@shortdev/fritz";
  * await using client = new FritzClient("http://fritz.box");
  * ```
  */
@@ -34,7 +34,7 @@ export class FritzClient {
   ): Promise<FritzResponse<Endpoint["response"]>>;
 
   /**
-   * Sends a POST request to the specified endpoint.
+   * Sends a GET or POST request with payload to the specified endpoint.
    * @param endpoint
    * @param payload The request payload.
    */
@@ -113,6 +113,12 @@ export class FritzClient {
     return thisClient;
   }
 
+  /**
+   * Creates a test FritzClient instance with a custom request handler.
+   * @param baseUrl The base URL of the Fritz!Box device.
+   * @param handler The custom request handler function.
+   * @returns A new FritzClient instance with the custom request handler.
+   */
   static createTestClient(
     baseUrl: string | URL,
     handler: (request: MiddlewareRequest) => Promise<Response> | Response,
@@ -125,10 +131,16 @@ export class FritzClient {
   }
 }
 
-type MiddlewareRequest = {
+/**
+ * Request type for middleware.
+ */
+export type MiddlewareRequest = {
   url: string | URL;
 } & RequestInit;
 
+/**
+ * Middleware for handling requests and responses.
+ */
 export type Middleware = {
   /**
    * Handles an outgoing request.
@@ -145,7 +157,14 @@ export type Middleware = {
   dispose?(base: FritzClient): Promise<void> | void;
 };
 
-type ResponseDataOptions = {
+/**
+ * Options for fetching response data.
+ */
+export type ResponseDataOptions = {
+  /**
+   * Whether to throw an error if the response status is not OK.
+   * @default true
+   */
   throwOnError?: boolean;
 };
 
@@ -153,8 +172,8 @@ type ResponseDataOptions = {
  * Response wrapper for Fritz!Box responses.
  * @example
  * ```ts
- * import { FritzClient } from "./client.ts";
- * import { RequestSid } from "./protocol/login-sid.ts";
+ * import { FritzClient } from "@shortdev/fritz";
+ * import { RequestSid } from "@shortdev/fritz/client/protocol/login-sid.ts";
  *
  * const client = new FritzClient("http://fritz.box");
  * const response = await client.request(RequestSid);
@@ -265,3 +284,5 @@ export class FritzResponse<ResponseSchema extends FritzRequest["response"]> {
     await body.cancel();
   }
 }
+
+export * from "./request.ts";

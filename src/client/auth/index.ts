@@ -1,2 +1,3 @@
-export { auth } from "./middleware.ts";
-export { UserPassword } from "./user-password.ts";
+export * from "./handler.ts";
+export * from "./middleware.ts";
+export * from "./user-password.ts";
