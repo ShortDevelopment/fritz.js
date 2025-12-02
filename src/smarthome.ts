@@ -43,6 +43,30 @@ export const listDevices = async (
   );
 };
 
+/**
+ * Retrieves a specific Smart Home device by its actor ID.
+ * @param client The FritzClient instance.
+ * @param actorId The actor ID of the device.
+ * @returns The SmartHomeDevice instance for the specified actor ID.
+ */
+export const smartDevice = async (
+  client: FritzClient,
+  actorId: string,
+): Promise<SmartHomeDevice> => {
+  const response = await client.request(Devices.Info, {
+    switchcmd: "getdeviceinfos",
+    ain: actorId,
+  }).then((x) => x.data());
+
+  if (!("device" in response)) {
+    throw new Error(
+      `Device with actor ID ${actorId} not found`,
+    );
+  }
+
+  return new SmartHomeDevice(client, response.device);
+};
+
 type DeviceInfo = v.InferOutput<
   typeof Devices.List.response
 >["devicelist"]["device"][number];

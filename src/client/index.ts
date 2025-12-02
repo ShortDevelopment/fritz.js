@@ -197,10 +197,20 @@ export class FritzResponse<ResponseSchema extends FritzRequest["response"]> {
   /**
    * Throws an error if the response status is not OK.
    */
-  throwOnError(): void {
+  async throwOnError(): Promise<void> {
     if (this.response.ok) return;
 
-    throw new Error(`Request failed with status ${this.response.status}`);
+    const { status, statusText } = this.response;
+    const data = await this.rawData({ throwOnError: false });
+    throw new FritzError(
+      `Request failed with status ${this.response.status}`,
+      {
+        cause: undefined,
+        status,
+        statusText,
+        data,
+      },
+    );
   }
 
   /**
@@ -209,7 +219,7 @@ export class FritzResponse<ResponseSchema extends FritzRequest["response"]> {
    */
   async rawData(options?: ResponseDataOptions): Promise<unknown> {
     if (options?.throwOnError ?? true) {
-      this.throwOnError();
+      await this.throwOnError();
     }
 
     // Content-Type: text/plain; charset=utf-8
@@ -253,7 +263,7 @@ export class FritzResponse<ResponseSchema extends FritzRequest["response"]> {
    */
   async rawJson(options?: ResponseDataOptions): Promise<unknown> {
     if (options?.throwOnError ?? true) {
-      this.throwOnError();
+      await this.throwOnError();
     }
 
     return await this.response.json();
@@ -265,7 +275,7 @@ export class FritzResponse<ResponseSchema extends FritzRequest["response"]> {
    */
   async rawText(options?: ResponseDataOptions): Promise<string> {
     if (options?.throwOnError ?? true) {
-      this.throwOnError();
+      await this.throwOnError();
     }
 
     return await this.response.text();
@@ -282,6 +292,27 @@ export class FritzResponse<ResponseSchema extends FritzRequest["response"]> {
     }
 
     await body.cancel();
+  }
+}
+
+/**
+ * Error class for FRITZ!Box errors.
+ */
+export class FritzError extends Error {
+  constructor(
+    message: string,
+    options?: ErrorOptions & {
+      status?: number;
+      statusText?: string;
+      data?: unknown;
+    },
+  ) {
+    super(message, options);
+    this.name = "FritzError";
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FritzError);
+    }
   }
 }
 
