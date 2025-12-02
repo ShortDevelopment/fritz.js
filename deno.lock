@@ -7,7 +7,7 @@
     "jsr:@std/dotenv@*": "0.225.5",
     "jsr:@std/dotenv@~0.225.5": "0.225.5",
     "jsr:@std/internal@^1.0.12": "1.0.12",
-    "jsr:@valibot/valibot@^1.1.0": "1.1.0"
+    "jsr:@valibot/valibot@^1.2.0": "1.2.0"
   },
   "jsr": {
     "@libs/xml@7.0.3": {
@@ -28,8 +28,8 @@
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     },
-    "@valibot/valibot@1.1.0": {
-      "integrity": "2617f02b532011b8140926899d420a3e1bbb0fcb7cdf8e7b669df89e7edd7f5f"
+    "@valibot/valibot@1.2.0": {
+      "integrity": "61c118a4d027ed55912caf381c78f0a178f335f46ad0c4bcb136498dc1ef2285"
     }
   },
   "workspace": {
@@ -38,7 +38,7 @@
       "jsr:@std/assert@^1.0.16",
       "jsr:@std/crypto@^1.0.5",
       "jsr:@std/dotenv@~0.225.5",
-      "jsr:@valibot/valibot@^1.1.0"
+      "jsr:@valibot/valibot@^1.2.0"
     ]
   }
 }

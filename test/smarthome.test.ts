@@ -13,9 +13,11 @@ Deno.test({
 
     const list = await listDevices(client);
     for (const device of list) {
-      console.log(
-        `Device: ${device.name} (${device.productName}) by ${device.manufacturer}`,
-      );
+      console.log({
+        device: { ...device },
+        lastState: { ...device.lastState },
+        currentState: { ...await device.refreshState() },
+      });
     }
   },
 });

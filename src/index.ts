@@ -10,5 +10,5 @@
  * @module
  */
 
-export { FritzClient } from "./client/index.ts";
+export * from "./client/index.ts";
 export * from "./client/auth/index.ts";

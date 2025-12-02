@@ -24,6 +24,7 @@
 import type { FritzClient } from "./client/index.ts";
 import type * as v from "@valibot/valibot";
 import { Devices } from "./client/protocol/homeauto-switch.ts";
+import { enumerable } from "./utils.ts";
 
 /**
  * Lists all Smart Home devices known to the Fritz!Box.
@@ -71,15 +72,15 @@ export enum DeviceFunctionBitmask {
 /**
  * Represents a color in HSV format.
  */
-type HsvColor = {
+export type HsvColor = {
   /**
    * Hue between 0 and 359 degrees
    */
-  hue: number;
+  readonly hue: number;
   /**
    * Saturation between 0 and 255
    */
-  saturation: number;
+  readonly saturation: number;
 };
 
 /**
@@ -96,45 +97,55 @@ type HsvColor = {
  * }
  * ```
  */
-export class SmartHomeDevice {
+class SmartHomeDevice {
+  #client: FritzClient;
+  #lastState: DeviceInfo;
   constructor(
-    private readonly client: FritzClient,
-    private readonly info: DeviceInfo,
-  ) {}
+    client: FritzClient,
+    info: DeviceInfo,
+  ) {
+    this.#client = client;
+    this.#lastState = info;
+  }
 
   /**
    * The unique actor ID of the device.
    */
+  @enumerable
   get actorId(): string {
-    return this.info["@identifier"];
+    return this.#lastState["@identifier"];
   }
 
   /**
    * The name of the device.
    */
+  @enumerable
   get name(): string {
-    return this.info.name;
+    return this.#lastState.name;
   }
 
   /**
    * The product name of the device.
    */
+  @enumerable
   get productName(): string {
-    return this.info["@productname"];
+    return this.#lastState["@productname"];
   }
 
   /**
    * The manufacturer of the device.
    */
+  @enumerable
   get manufacturer(): string {
-    return this.info["@manufacturer"];
+    return this.#lastState["@manufacturer"];
   }
 
   /**
    * A bitmask representing the device's supported functions.
    */
+  @enumerable
   get features(): DeviceFunctionBitmask {
-    return parseInt(this.info["@functionbitmask"], 10);
+    return this.#lastState["@functionbitmask"];
   }
 
   /**
@@ -147,6 +158,36 @@ export class SmartHomeDevice {
   }
 
   /**
+   * The last known state of the device.
+   * This state may be outdated but is always available.
+   * @return The SmartHomeDeviceState instance.
+   * @see refreshState() to get the latest state from the Fritz!Box.
+   */
+  @enumerable
+  get lastState(): SmartHomeDeviceState {
+    return new SmartHomeDeviceState(this.#lastState);
+  }
+
+  /**
+   * Refreshes the current state of the device from the Fritz!Box.
+   * @returns The updated SmartHomeDeviceState instance.
+   */
+  async refreshState(): Promise<SmartHomeDeviceState> {
+    const response = await this.#client.request(Devices.Info, {
+      switchcmd: "getdeviceinfos",
+      ain: this.actorId,
+    }).then((x) => x.data());
+
+    if (!("device" in response)) {
+      throw new Error(
+        "Failed to refresh device state: No device info returned",
+      );
+    }
+
+    return new SmartHomeDeviceState(this.#lastState = response.device);
+  }
+
+  /**
    * Turns the device on.
    */
   async turnOn(): Promise<void> {
@@ -154,7 +195,7 @@ export class SmartHomeDevice {
       throw new Error("Device does not support On/Off");
     }
 
-    await this.client.request(Devices.SetOnOff, {
+    await this.#client.request(Devices.SetOnOff, {
       ain: this.actorId,
       switchcmd: "setsimpleonoff",
       onoff: "1",
@@ -169,7 +210,7 @@ export class SmartHomeDevice {
       throw new Error("Device does not support On/Off");
     }
 
-    await this.client.request(Devices.SetOnOff, {
+    await this.#client.request(Devices.SetOnOff, {
       ain: this.actorId,
       switchcmd: "setsimpleonoff",
       onoff: "0",
@@ -190,7 +231,7 @@ export class SmartHomeDevice {
       throw new Error("Level must be between 0 and 255");
     }
 
-    await this.client.request(Devices.SetLevel, {
+    await this.#client.request(Devices.SetLevel, {
       ain: this.actorId,
       switchcmd: "setlevel",
       level,
@@ -210,7 +251,7 @@ export class SmartHomeDevice {
       throw new Error("Percent must be between 0 and 100");
     }
 
-    await this.client.request(Devices.SetLevelPercentage, {
+    await this.#client.request(Devices.SetLevelPercentage, {
       ain: this.actorId,
       switchcmd: "setlevelpercentage",
       level: percent,
@@ -241,7 +282,7 @@ export class SmartHomeDevice {
         throw new Error("Temperature must be between 2700 and 6500");
       }
 
-      await this.client.request(Devices.SetColorTemperature, {
+      await this.#client.request(Devices.SetColorTemperature, {
         ain: this.actorId,
         switchcmd: "setcolortemperature",
         temperature,
@@ -258,7 +299,7 @@ export class SmartHomeDevice {
         throw new Error("Saturation must be between 0 and 255");
       }
 
-      await this.client.request(Devices.SetColorUnmapped, {
+      await this.#client.request(Devices.SetColorUnmapped, {
         ain: this.actorId,
         switchcmd: "setunmappedcolor",
         hue,
@@ -268,3 +309,147 @@ export class SmartHomeDevice {
     }
   }
 }
+
+/**
+ * Represents the current state of a Smart Home device.
+ */
+class SmartHomeDeviceState {
+  readonly timestamp: number = Date.now();
+
+  readonly #state: DeviceInfo;
+  constructor(
+    state: DeviceInfo,
+  ) {
+    this.#state = state;
+  }
+
+  /**
+   * Indicates whether the device is currently connected to the Fritz!Box.
+   * @return `true` if present, `false` if not present, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get isPresent(): boolean | undefined {
+    switch (this.#state.present) {
+      case "1":
+        return true;
+      case "0":
+        return false;
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * The current battery level of the device.
+   * @returns The battery level between 0 and 100, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get batteryLevel(): number | undefined {
+    const battery = this.#state.battery;
+    if (!battery || isNaN(battery)) {
+      return undefined;
+    }
+    return battery;
+  }
+
+  /**
+   * Indicates whether the device has a low battery.
+   * @returns `true` if low battery, `false` if battery is okay, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get hasLowBattery(): boolean | undefined {
+    switch (this.#state.batterylow) {
+      case "1":
+        return true;
+      case "0":
+        return false;
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Indicates whether the device is currently on.
+   * @returns `true` if on, `false` if off, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get isOn(): boolean | undefined {
+    switch (this.#state.simpleonoff?.state) {
+      case "1":
+        return true;
+      case "0":
+        return false;
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * The current level of the device.
+   * Might be brightness for lights, height for blinds, etc.
+   * @returns The level between 0 and 255, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get level(): number | undefined {
+    const level = this.#state.levelcontrol?.level;
+    if (!level || isNaN(level)) {
+      return undefined;
+    }
+    return level;
+  }
+
+  /**
+   * The current level of the device as a percentage.
+   * Might be brightness for lights, height for blinds, etc.
+   * @returns The level percentage between 0 = 0% and 100 = 100%, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get levelPercent(): number | undefined {
+    const level = this.#state.levelcontrol?.levelpercentage;
+    if (!level || isNaN(level)) {
+      return undefined;
+    }
+    return level;
+  }
+
+  /**
+   * The current color of the device.
+   * @returns The color as HsvColor, the color temperature in kelvin, or `undefined` if the state is unknown.
+   */
+  @enumerable
+  get color(): HsvColor | number | undefined {
+    const colorControl = this.#state.colorcontrol;
+    if (!colorControl) {
+      return undefined;
+    }
+
+    const mode = colorControl["@current_mode"];
+    if (mode === 0x04) { // Color temperature mode
+      const temperature = colorControl.temperature;
+      return !temperature || isNaN(temperature) ? undefined : temperature;
+    }
+
+    if (mode !== 0x01) { // Not color mode
+      return undefined;
+    }
+
+    const { hue, saturation, unmapped_hue, unmapped_saturation } = colorControl;
+    if (unmapped_hue && unmapped_saturation) {
+      return {
+        hue: unmapped_hue,
+        saturation: unmapped_saturation,
+      };
+    }
+
+    if (!hue || !saturation) {
+      return undefined;
+    }
+
+    return {
+      hue,
+      saturation,
+    };
+  }
+}
+
+export type { SmartHomeDevice, SmartHomeDeviceState };
